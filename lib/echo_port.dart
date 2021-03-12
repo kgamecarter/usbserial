@@ -5,10 +5,10 @@ import 'types.dart';
 /// Test harnass stub for UsbPort.
 /// Sends the data back with a delay.
 class EchoPort extends AsyncDataSinkSource {
-  Stream<Uint8List> _stream;
-  StreamController<Uint8List> _controller;
+  late Stream<Uint8List> _stream;
+  StreamController<Uint8List>? _controller;
   bool _running = false;
-  List<Uint8List> _buffer;
+  late List<Uint8List> _buffer;
   final Duration writeDelay;
 
   EchoPort({this.writeDelay = const Duration(seconds: 0)}) {
@@ -21,7 +21,7 @@ class EchoPort extends AsyncDataSinkSource {
       _running = true;
       if (_buffer.length > 0) {
         _buffer.forEach((data) {
-          _controller.add(data);
+          _controller?.add(data);
         });
         _buffer.clear();
       }
@@ -34,7 +34,7 @@ class EchoPort extends AsyncDataSinkSource {
     _controller = StreamController<Uint8List>(
         onListen: start, onPause: stop, onResume: start, onCancel: stop);
 
-    return _controller.stream;
+    return _controller!.stream;
   }
 
   @override
@@ -44,7 +44,7 @@ class EchoPort extends AsyncDataSinkSource {
 
   Future<void> _write(Uint8List data) async {
     if (_running) {
-      _controller.add(data);
+      _controller?.add(data);
     } else {
       _buffer.add(data);
     }
@@ -62,6 +62,6 @@ class EchoPort extends AsyncDataSinkSource {
   }
 
   void close() {
-    _controller.close();
+    _controller?.close();
   }
 }

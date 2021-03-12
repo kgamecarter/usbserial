@@ -41,10 +41,10 @@ class TerminatedTransformer implements StreamTransformer<Uint8List, Uint8List> {
       maxLen; // maximum length the partial buffer will hold before it starts flushing.
   final stripTerminator;
 
-  StreamController _controller;
-  StreamSubscription _subscription;
-  Stream<Uint8List> _stream;
-  List<int> _partial;
+  late StreamController<Uint8List> _controller;
+  StreamSubscription? _subscription;
+  Stream<Uint8List>? _stream;
+  late List<int> _partial;
 
   /// Splits the incoming stream at the given terminator sequence.
   /// maxLen is the maximum number of bytes that will be collected
@@ -56,9 +56,9 @@ class TerminatedTransformer implements StreamTransformer<Uint8List, Uint8List> {
   ///
   /// This constructor creates a single stream
   TerminatedTransformer(
-      {bool sync: false,
-      this.cancelOnError,
       this.terminator,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.stripTerminator = true}) {
     _partial = [];
@@ -66,10 +66,10 @@ class TerminatedTransformer implements StreamTransformer<Uint8List, Uint8List> {
         onListen: _onListen,
         onCancel: _onCancel,
         onPause: () {
-          _subscription.pause();
+          _subscription?.pause();
         },
         onResume: () {
-          _subscription.resume();
+          _subscription?.resume();
         },
         sync: sync);
   }
@@ -84,9 +84,9 @@ class TerminatedTransformer implements StreamTransformer<Uint8List, Uint8List> {
   ///
   /// This constructor creates a broadcast stream
   TerminatedTransformer.broadcast(
-      {bool sync: false,
-      this.cancelOnError,
       this.terminator,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.stripTerminator = true}) {
     _partial = [];
@@ -95,14 +95,14 @@ class TerminatedTransformer implements StreamTransformer<Uint8List, Uint8List> {
   }
 
   void _onListen() {
-    _subscription = _stream.listen(onData,
+    _subscription = _stream?.listen(onData,
         onError: _controller.addError,
         onDone: _controller.close,
         cancelOnError: cancelOnError);
   }
 
   void _onCancel() {
-    _subscription.cancel();
+    _subscription?.cancel();
     _subscription = null;
   }
 
@@ -151,10 +151,10 @@ class TerminatedStringTransformer
       maxLen; // maximum length the partial buffer will hold before it starts flushing.
   final stripTerminator;
 
-  StreamController _controller;
-  StreamSubscription _subscription;
-  Stream<Uint8List> _stream;
-  List<int> _partial;
+  late StreamController<String> _controller;
+  StreamSubscription? _subscription;
+  Stream<Uint8List>? _stream;
+  late List<int> _partial;
 
   /// Splits the incoming stream at the given terminator sequence
   /// and converts to input to a string.
@@ -168,9 +168,9 @@ class TerminatedStringTransformer
   ///
   /// This constructor creates a single string stream
   TerminatedStringTransformer(
-      {bool sync: false,
-      this.cancelOnError,
       this.terminator,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.stripTerminator = true}) {
     _partial = [];
@@ -178,10 +178,10 @@ class TerminatedStringTransformer
         onListen: _onListen,
         onCancel: _onCancel,
         onPause: () {
-          _subscription.pause();
+          _subscription?.pause();
         },
         onResume: () {
-          _subscription.resume();
+          _subscription?.resume();
         },
         sync: sync);
   }
@@ -198,9 +198,9 @@ class TerminatedStringTransformer
   ///
   /// This constructor creates a broadcast string stream
   TerminatedStringTransformer.broadcast(
-      {bool sync: false,
-      this.cancelOnError,
       this.terminator,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.stripTerminator = true}) {
     _partial = [];
@@ -209,14 +209,14 @@ class TerminatedStringTransformer
   }
 
   void _onListen() {
-    _subscription = _stream.listen(onData,
+    _subscription = _stream?.listen(onData,
         onError: _controller.addError,
         onDone: _controller.close,
         cancelOnError: cancelOnError);
   }
 
   void _onCancel() {
-    _subscription.cancel();
+    _subscription?.cancel();
     _subscription = null;
   }
 
@@ -269,23 +269,23 @@ class TerminatedStringTransformer
 /// Will clear input if no data is received for at least 1 second.
 class MagicHeaderAndLengthByteTransformer
     implements StreamTransformer<Uint8List, Uint8List> {
-  final List<int> header;
+  final List<int?> header;
   final Duration clearTimeout;
-  List<int> _partial;
-  Timer _timer;
-  bool _dataSinceLastTick;
+  late List<int> _partial;
+  Timer? _timer;
+  bool _dataSinceLastTick = false;
   bool cancelOnError;
   final int
       maxLen; // maximum length the partial buffer will hold before it starts flushing.
 
-  StreamController _controller;
-  StreamSubscription _subscription;
-  Stream<Uint8List> _stream;
+  late StreamController<Uint8List> _controller;
+  StreamSubscription? _subscription;
+  Stream<Uint8List>? _stream;
 
   MagicHeaderAndLengthByteTransformer(
-      {bool sync: false,
-      this.cancelOnError,
       this.header,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.clearTimeout = const Duration(seconds: 1)}) {
     _partial = [];
@@ -293,18 +293,18 @@ class MagicHeaderAndLengthByteTransformer
         onListen: _onListen,
         onCancel: _onCancel,
         onPause: () {
-          _subscription.pause();
+          _subscription?.pause();
         },
         onResume: () {
-          _subscription.resume();
+          _subscription?.resume();
         },
         sync: sync);
   }
 
   MagicHeaderAndLengthByteTransformer.broadcast(
-      {bool sync: false,
-      this.cancelOnError,
       this.header,
+      {bool sync: false,
+      this.cancelOnError = false,
       this.maxLen = 1024,
       this.clearTimeout = const Duration(seconds: 1)}) {
     _partial = [];
@@ -314,7 +314,7 @@ class MagicHeaderAndLengthByteTransformer
 
   void _onListen() {
     _startTimer();
-    _subscription = _stream.listen(onData,
+    _subscription = _stream?.listen(onData,
         onError: _controller.addError,
         onDone: _controller.close,
         cancelOnError: cancelOnError);
@@ -322,7 +322,7 @@ class MagicHeaderAndLengthByteTransformer
 
   void _onCancel() {
     _stopTimer();
-    _subscription.cancel();
+    _subscription?.cancel();
     _subscription = null;
   }
 
@@ -379,7 +379,7 @@ class MagicHeaderAndLengthByteTransformer
   }
 
   void _stopTimer() {
-    _timer.cancel();
+    _timer?.cancel();
     _timer = null;
   }
 

@@ -29,31 +29,30 @@ import 'transformers.dart';
 ///
 class Transaction<T> {
   Stream<T> stream;
-  StreamQueue<T> _queue;
+  late StreamQueue<T> _queue;
 
   /// Create a transaction that transforms the incoming stream into
   /// events delimited by 'terminator'.
   static Transaction<Uint8List> terminated(
       Stream<Uint8List> stream, Uint8List terminator) {
     return Transaction<Uint8List>(stream
-        .transform(TerminatedTransformer.broadcast(terminator: terminator)));
+        .transform(TerminatedTransformer.broadcast(terminator)));
   }
 
   static Transaction<Uint8List> magicHeader(
       Stream<Uint8List> stream, List<int> header) {
     return Transaction<Uint8List>(stream.transform(
-        MagicHeaderAndLengthByteTransformer.broadcast(header: header)));
+        MagicHeaderAndLengthByteTransformer.broadcast(header)));
   }
 
   static Transaction<String> stringTerminated(
       Stream<Uint8List> stream, Uint8List terminator) {
     return Transaction<String>(stream.transform(
-        TerminatedStringTransformer.broadcast(terminator: terminator)));
+        TerminatedStringTransformer.broadcast(terminator)));
   }
 
   /// Create a new transaction based stream without transforming the input.
-  Transaction(Stream<T> stream) {
-    this.stream = stream;
+  Transaction(this.stream) {
     _queue = StreamQueue<T>(stream);
   }
 
@@ -82,7 +81,7 @@ class Transaction<T> {
 
   /// Get the next message from the queue if any.
   /// returns data or null on error.
-  Future<T> getMsg(Duration duration) async {
+  Future<T?> getMsg(Duration duration) async {
     // don't use the timeout on the .next property as
     // it will eat the next incoming packet.
     // instead use hasNext and then use
@@ -104,7 +103,7 @@ class Transaction<T> {
   /// 2. Write the message
   /// 3. Await the answer for at most "duration" time.
   /// returns List of bytes or null on timeout.
-  Future<T> transaction(
+  Future<T?> transaction(
       AsyncDataSinkSource port, Uint8List message, Duration duration) async {
     await flush();
     port.write(message);

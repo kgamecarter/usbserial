@@ -12,32 +12,26 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  UsbPort _port;
+  UsbPort? _port;
   String _status = "Idle";
   List<Widget> _ports = [];
   List<Widget> _serialData = [];
-  StreamSubscription<String> _subscription;
-  Transaction<String> _transaction;
-  int _deviceId;
+  StreamSubscription<String>? _subscription;
+  Transaction<String>? _transaction;
+  int? _deviceId;
   TextEditingController _textController = TextEditingController();
 
   Future<bool> _connectTo(device) async {
     _serialData.clear();
 
-    if (_subscription != null) {
-      _subscription.cancel();
-      _subscription = null;
-    }
+    _subscription?.cancel();
+    _subscription = null;
 
-    if (_transaction != null) {
-      _transaction.dispose();
-      _transaction = null;
-    }
+    _transaction?.dispose();
+    _transaction = null;
 
-    if (_port != null) {
-      _port.close();
-      _port = null;
-    }
+    _port?.close();
+    _port = null;
 
     if (device == null) {
       _deviceId = null;
@@ -48,7 +42,7 @@ class _MyAppState extends State<MyApp> {
     }
 
     _port = await device.create();
-    if (!await _port.open()) {
+    if (!await _port!.open()) {
       setState(() {
         _status = "Failed to open port";
       });
@@ -56,15 +50,15 @@ class _MyAppState extends State<MyApp> {
     }
 
     _deviceId = device.deviceId;
-    await _port.setDTR(true);
-    await _port.setRTS(true);
-    await _port.setPortParameters(
+    await _port!.setDTR(true);
+    await _port!.setRTS(true);
+    await _port!.setPortParameters(
         115200, UsbPort.DATABITS_8, UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
 
     _transaction = Transaction.stringTerminated(
-        _port.inputStream, Uint8List.fromList([13, 10]));
+        _port!.inputStream, Uint8List.fromList([13, 10]));
 
-    _subscription = _transaction.stream.listen((String line) {
+    _subscription = _transaction!.stream.listen((String line) {
       setState(() {
         _serialData.add(Text(line));
         if (_serialData.length > 20) {
@@ -89,7 +83,7 @@ class _MyAppState extends State<MyApp> {
           leading: Icon(Icons.usb),
           title: Text(device.productName),
           subtitle: Text(device.manufacturerName),
-          trailing: RaisedButton(
+          trailing: ElevatedButton(
             child:
                 Text(_deviceId == device.deviceId ? "Disconnect" : "Connect"),
             onPressed: () {
@@ -110,7 +104,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    UsbSerial.usbEventStream.listen((UsbEvent event) {
+    UsbSerial.usbEventStream?.listen((UsbEvent event) {
       _getPorts();
     });
 
@@ -136,7 +130,7 @@ class _MyAppState extends State<MyApp> {
             _ports.length > 0
                 ? "Available Serial Ports"
                 : "No serial devices available",
-            style: Theme.of(context).textTheme.title),
+            style: Theme.of(context).textTheme.headline6),
         ..._ports,
         Text('Status: $_status\n'),
         ListTile(
@@ -147,7 +141,7 @@ class _MyAppState extends State<MyApp> {
               labelText: 'Text To Send',
             ),
           ),
-          trailing: RaisedButton(
+          trailing: ElevatedButton(
             child: Text("Send"),
             onPressed: _port == null
                 ? null
@@ -156,7 +150,7 @@ class _MyAppState extends State<MyApp> {
                       return;
                     }
                     String data = _textController.text + "\r\n";
-                    await _port.write(Uint8List.fromList(data.codeUnits));
+                    await _port!.write(Uint8List.fromList(data.codeUnits));
                     _textController.text = "";
                   },
           ),

@@ -19,14 +19,14 @@ void testEchoPort() {
       p.close();
     });
 
-    await expect(
-        stream,
-        emitsInOrder([
-          Uint8List.fromList([1, 2, 3, 4, 5]),
-          Uint8List.fromList([6, 7, 8, 9, 10]),
-          Uint8List.fromList([6, 7, 8, 9, 11]),
-          emitsDone
-        ]));
+    expect(
+      stream,
+      emitsInOrder([
+        Uint8List.fromList([1, 2, 3, 4, 5]),
+        Uint8List.fromList([6, 7, 8, 9, 10]),
+        Uint8List.fromList([6, 7, 8, 9, 11]),
+        emitsDone
+      ]));
   });
 }
 
